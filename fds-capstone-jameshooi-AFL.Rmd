@@ -1,0 +1,57 @@
+---
+title: "AFL: Player attribute influence on results"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Purpose
+In AFL as with any sport, teams are drive by one thing: Success. Success means winning, winning consistently, and winning premierships.
+
+This data driven analysis is intended to answer key questions for an AFL manager or coach. Should my team's training target skills, discipline or fitness? What sort of players am I seeking to recruit in the draft to maximise my chances of winning matches?
+
+## Hypothesis
+The core hypothesis of the analysis is that AFL player performance data recorded from competitive matches can be used to identify key success criteria and in turn predict match results.
+
+## Background - what is AFL?
+The Australian Football League (AFL) is a football code which has 18 competitive teams (as of 2017). AFL is a contact sport played on an oval with 18 players on each side and rotations with four players on the bench. The basic aim is to kick more points than the opposition by winning the ball and kicking goals.
+
+The basic rules of the game are:
+
+- The game has four quarters
+- The ball begins in dispute at a "centre bounce"
+- A player can possess and run with the ball but must either bounce, or pass or shoot ("dispose") of the ball within 15 metres
+- A player possessing the ball can be tackled by an opponent which may cause a turnover or award of a free kick
+- A free kick is awarded if a player catches ("marks") a kicked ball which has travelled at least 15m, or if an opponent has been penalised for an act
+- If the ball is in dispute (e.g. on the ground) with no clear winner, the umpire may throw the ball up to end the stalemate
+- A goal (six points) is kicked if the ball travels through the "big sticks" without touching them and without being touched by any player
+- The rules for behinds are complicated but what's important is they are worth one point, are usually scored by kicking through the "small sticks" surrounding the big sticks, and are never deliberately scored
+
+
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
