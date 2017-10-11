@@ -258,6 +258,23 @@
   #   arrange(desc(Year), match_id, index_type)
   
   
+  # player data
+  save(player.metrics, file=".\\player_metrics.Rda")
+  # season averages
+  save(mean.metrics.by.year, file=".\\mean_metrics_by_year.Rda")
+  # team results
+  save(team.results, file=".\\team_results.Rda")
+  # match-wise view of indices
+  save(team.indices.by.match, file=".\\team_indices_by_match.Rda")
+  # team-wise view of indices
+  save(team.indices.by.round.tidy, file=".\\team_indices_by_round_tidy.Rda")
+  # team-wise view of indices (wide format)
+  save(team.metrics.by.round, file=".\\team_metrics_by_round.Rda")
+  
+  
+  
+  
+  
   
 #### Plots ####
   
@@ -278,7 +295,7 @@
   # Summary plot, all indices by year
     # All games
     ggplot(team.indices.by.round.tidy, aes(x = factor(Year), y = team_index, col=team_result)) +
-      geom_jitter(width = 0.1, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ index_type, labeller = as_labeller(idx_names)) +
       labs(title = "Summary: all indices by year"
            , x = "Year"
@@ -288,7 +305,7 @@
     
     # Finals only
     ggplot(team.indices.by.round.tidy_finals, aes(x = factor(Year), y = team_index, col=team_result)) +
-      geom_jitter(width = 0.1, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ index_type, labeller = as_labeller(idx_names)) +
       labs(title = "Summary: all indices by year, Finals only"
            , x = "Year"
@@ -311,7 +328,7 @@
   # Individual index plots by year
     # Close skill
     ggplot(team.indices.by.round, aes(x = factor(team_result), y = idx_close_skill, col=team_result)) +
-      geom_jitter(width = 0.2, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ factor(Year))+
       labs(title = "Index: Close skill by year"
            , y = "Team index vs season avg"
@@ -322,7 +339,7 @@
     
     # Discipline & Effort
     ggplot(team.indices.by.round, aes(x = factor(team_result), y = idx_discipline, col=team_result)) +
-      geom_jitter(width = 0.2, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ factor(Year))+
       labs(title = "Index: Discipline & effort by year"
            , y = "Team index vs season avg"
@@ -333,7 +350,7 @@
   
     # Free movement
     ggplot(team.indices.by.round, aes(x = factor(team_result), y = idx_free_running, col=team_result)) +
-      geom_jitter(width = 0.2, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ factor(Year))+
       labs(title = "Index: Free movement by year"
            , y = "Team index vs season avg"
@@ -344,7 +361,7 @@
     
     # General skill
     ggplot(team.indices.by.round, aes(x = factor(team_result), y = idx_general_skill, col=team_result)) +
-      geom_jitter(width = 0.2, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ factor(Year))+
       labs(title = "Index: General skill by year"
            , y = "Team index vs season avg"
@@ -355,7 +372,7 @@
     
     # Teamwork
     ggplot(team.indices.by.round, aes(x = factor(team_result), y = idx_teamwork, col=team_result)) +
-      geom_jitter(width = 0.2, alpha = .4) +
+      geom_point(alpha = 0.2, position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8)) +
       facet_grid(. ~ factor(Year))+
       labs(title = "Index: Teamwork by year"
            , y = "Team index vs season avg"
