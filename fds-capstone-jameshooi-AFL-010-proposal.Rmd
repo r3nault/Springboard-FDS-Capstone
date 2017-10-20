@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Purpose & Objective
 In AFL, as with any sport, teams are driven by one thing: Success. Success means winning, winning consistently, and winning premierships.
 
+Here's a snippet of a game: [youtube.com/watch?v=QH188gSGnsk](https://www.youtube.com/watch?v=QH188gSGnsk)
+
 This data driven analysis is intended to answer key questions for an AFL manager or coach. Should my team's training target skills, discipline or fitness? What sort of players am I seeking to recruit in the draft to maximise my chances of winning matches?
 
 ### Hypothesis
