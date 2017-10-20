@@ -1,9 +1,10 @@
 ---
 title: "AFL: Player attribute influence on results"
-subtitle: "Press 'w' for widescreen display (recommended)"
+subtitle: "Project Proposal"
 author: James Hooi
 css: ioslides.css
 output: ioslides_presentation
+widescreen: true
 logo: afl_logo.png
 ---
 

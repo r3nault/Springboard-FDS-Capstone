@@ -16,7 +16,7 @@ time, mark, audio, video {
   margin: 0;
   padding: 0;
   border: 0;
-  font: inherit;
+  /*font: inherit;*/
   font-size: 100%;
   vertical-align: baseline;
 }
@@ -450,18 +450,18 @@ h1, h2, h3 {
 
 /* line 280, ../scss/default.scss */
 h2 {
-  font-size: 30px;
-  line-height: 45px;
+  font-size: 24px;
+  line-height: 32px;
   letter-spacing: -2px;
   color: #515151;
 }
 
 /* line 287, ../scss/default.scss */
 h3 {
-  font-size: 24px;
+  font-size: 18px;
   letter-spacing: -1px;
-  line-height: 2;
-  font-weight: inherit;
+  line-height: 26px;
+  font-weight: bold;
   color: #797979;
 }
 
@@ -525,11 +525,11 @@ ol ol {
 /* line 337, ../scss/default.scss */
 pre {
   font-family: 'Source Code Pro', 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 18px;
-  padding: 10px 0 10px 60px;
+  font-size: 10px;
+  line-height: 12px;
+  padding: 5px 0 0 60px;
   letter-spacing: -1px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   width: 106%;
   left: -60px;
   position: relative;
