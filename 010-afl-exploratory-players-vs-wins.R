@@ -47,6 +47,8 @@
   # Remove "Tot" column, not required
   # Remove "Subs" metric, not required
   player.metrics <- player.metrics %>% select(-Tot) %>% filter(Metric != "Subs")
+      # for Rmd
+      # raw.player.metrics <- player.metrics
   
   # Turn data into long format
   # Clean non-ASCII characters
@@ -123,13 +125,6 @@
   team.results$round <- sub("PF", "R27-PF", team.results$round, fixed = TRUE)
   team.results$round <- sub("GF", "R28-GF", team.results$round, fixed = TRUE)
   team.results$round <- sub("GF.1", "R29-GF2", team.results$round, fixed = TRUE)
-  
-  # Remove draws - not meaningful to results
-  team.results <- team.results %>% 
-    filter(team_result != "draw") %>% 
-    mutate(finals_game = if_else(grepl("F",round),1,0)) %>% 
-    select(Team, Year, round, team_result, finals_game, match_id)
-  
   # Check team names are consistent with player data source
   # current.teams.alias <- c("Adelaide","Brisbane","Carlton","Collingwood","Essendon","Fremantle",
   #                          "Geelong","Gold Coast","Greater Western Sydney","Hawthorn","Melbourne","North Melbourne",
@@ -137,6 +132,16 @@
   # unique(team.results[!team.results$Team %in% current.teams.alias, "Team"])
   team.results$Team <- sub("Brisbane Lions", "Brisbane", team.results$Team, fixed = TRUE)
   team.results$Team <- sub("Kangaroos", "North Melbourne", team.results$Team, fixed = TRUE)
+  team.results$vs_opponent <- sub("Brisbane Lions", "Brisbane", team.results$vs_opponent, fixed = TRUE)
+  team.results$vs_opponent <- sub("Kangaroos", "North Melbourne", team.results$vs_opponent, fixed = TRUE)
+  
+  # Remove draws - not meaningful to results
+  team.results.y <- team.results %>% 
+    filter(team_result != "draw") %>% 
+    mutate(finals_game = if_else(grepl("F",round),1,0)) %>% 
+    select(Team, Year, round, team_result, finals_game, match_id)
+  
+  
   
   
   
