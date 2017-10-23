@@ -482,7 +482,9 @@ parse_score_str &lt;- function(in.score.str){
   prep.team.res &lt;- prep.team.res %&gt;% rename(Year = season, Team = teams)
   prep.team.res$Team &lt;- sub(&quot;Brisbane Lions&quot;, &quot;Brisbane&quot;, prep.team.res$Team, fixed = TRUE)
   prep.team.res$Team &lt;- sub(&quot;Kangaroos&quot;, &quot;North Melbourne&quot;, prep.team.res$Team, fixed = TRUE)
-  
+  prep.team.res$vs_opponent &lt;- sub(&quot;Brisbane Lions&quot;, &quot;Brisbane&quot;, prep.team.res$vs_opponent, fixed = TRUE)
+  prep.team.res$vs_opponent &lt;- sub(&quot;Kangaroos&quot;, &quot;North Melbourne&quot;, prep.team.res$vs_opponent, fixed = TRUE)
+
   head(data.frame(prep.team.res), 6)</pre>
 
 <pre >##               Team     score_str final_score round home_away Year match_id rownum      vs_opponent team_result final_margin Q1score_cumul Q2score_cumul Q3score_cumul Q4score_cumul ETscore_cumul

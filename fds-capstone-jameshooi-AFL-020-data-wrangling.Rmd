@@ -322,7 +322,9 @@ Finally, wrangling to get terms and formats consistent with player metric data w
   prep.team.res <- prep.team.res %>% rename(Year = season, Team = teams)
   prep.team.res$Team <- sub("Brisbane Lions", "Brisbane", prep.team.res$Team, fixed = TRUE)
   prep.team.res$Team <- sub("Kangaroos", "North Melbourne", prep.team.res$Team, fixed = TRUE)
-  
+  prep.team.res$vs_opponent <- sub("Brisbane Lions", "Brisbane", prep.team.res$vs_opponent, fixed = TRUE)
+  prep.team.res$vs_opponent <- sub("Kangaroos", "North Melbourne", prep.team.res$vs_opponent, fixed = TRUE)
+
   head(data.frame(prep.team.res), 6)
 ```
 
