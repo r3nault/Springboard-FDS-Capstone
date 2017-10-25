@@ -42,12 +42,18 @@ Data for this project was collected from [afltables.com](https://afltables.com) 
 
 ### x variables
 The player metrics are the x variables; that is, the hypothesis is the players' performance as aggregated at team level can explain and predict the match result. See example here (one team, one season, round-by-round): [afltables.com/afl/stats/teams/geelong/2017_gbg.html](https://afltables.com/afl/stats/teams/geelong/2017_gbg.html)
-
+<div style="margin-left:0px; margin-top:10px; margin-bottom:10px">
+<img src="player_metrics_eg_85pc.png"></img>
+</div>
 In total, I analysed 15 seasons worth of data for 16-18 teams (the number of teams has not been consistent over that timeframe). Due to the number of combinations of seasons and teams, I scraped this data with R.
+
+## Data sources and key variables (cont'd)
 
 ### y variable
 The metric I am seeking to predict is the team result for a given match. See example here (one season, round-by-round): [afltables.com/afl/seas/2017.html](https://afltables.com/afl/seas/2017.html)
-
+<div style="margin-left:0px; margin-top:10px; margin-bottom:10px">
+<img src="team_results_eg_70pc.png"></img>
+</div>
 I analysed the same 15 seasons for the teams. This data was easy to copy manually and extract via Excel.
 
 ## Scraping player metrics
