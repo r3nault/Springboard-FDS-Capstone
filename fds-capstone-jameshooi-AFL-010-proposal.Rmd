@@ -33,12 +33,10 @@ My proposed data science project is to seek insights on what determines the resu
 
 The client in this case is an AFL football team manager or coach who needs to set up his/her team's tactics before the start of the season, or needs to know how to select players in the annual player draft. Knowing how tactics and performance metrics influence results can inform these decisions and could potentially challenge "accepted wisdom" on how AFL games are played and won.
 
-```{r fig.width=4, fig.height=3, echo=FALSE, warning=FALSE}
-library(png)
-library(grid)
-img <- readPNG("./afl_teams.png")
- grid.raster(img)
-```
+<div style="margin-left:0px; margin-top:10px;">
+<img src="afl_teams_50pc.png"></img>
+</div>
+
 
 ## Proposed capstone project (cont'd)
 ### Approach
