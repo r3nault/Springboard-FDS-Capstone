@@ -9,13 +9,14 @@ logo: afl_logo.png
 ---
 
 ```{r setup, include=FALSE}
-# EVAL TURNED OFF: exploreplot01, exploreplot02, exploreplot03, exploreplot04, exploreplot11, exploreplot12, exploreplot13, exploreplot14, exploreplot15, exploreplot16a
+# EVAL TURNED OFF: exploreplot01, exploreplot02, exploreplot03, exploreplot04, exploreplot11, exploreplot12, exploreplot13, exploreplot14, exploreplot15, exploreplot16a, select01, select02, select03
 
 knitr::opts_chunk$set(echo = FALSE)
 # set working directory
   setwd("C:\\Users\\james.hooi\\Documents\\data analytics\\Springboard-FDS-Capstone")
 # load required libraries
   library(dplyr)
+  library(tidyr)
   library(ggplot2)
   library(reshape2)
   
@@ -314,22 +315,24 @@ Finally, to check the distributions of the index data, I created a histogram fun
 
 ```{r exploreplot16, eval=TRUE, echo=TRUE, warning=FALSE}
 ggplot_hist <- function(in_df, xvar, in_width, plot_title){
-  ggph <- ggplot(in_df, aes(x=in_df[[xvar]], fill=team_result)) +
-            geom_histogram(binwidth = in_width, position = position_dodge(in_width), alpha=0.8) +
+  ggph <- ggplot(in_df, aes(x=in_df[[xvar]], fill=team_result)) + geom_histogram(binwidth = in_width, position = position_dodge(in_width), alpha=0.8) +
             scale_fill_manual(labels = c("Loss","Win"), values = c("red","blue")) + labs(title = plot_title, color = "Result") +
             theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(size = 6),
                   axis.text.y = element_text(size = 6), legend.position = "none", plot.title = element_text(size = 9))
   return(ggph) }
 ```
 
-```{r exploreplot16a, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2, fig.width=2.55}
+```{r exploreplot16a, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=1.4, fig.width=2.55}
 ggplot_hist(AFL.by.match.idx, "idx_win_ground_ball", 0.02, "idx_win_ground_ball distribution")
 ggplot_hist(AFL.by.match.idx, "idx_win_aerial_ball", 0.02, "idx_win_aerial_ball distribution") + scale_x_continuous(limits = c(-1,1))
 ggplot_hist(AFL.by.match.idx, "idx_clear_ball", 0.02, "idx_clear_ball distribution")
 ggplot_hist(AFL.by.match.idx, "idx_less_clangers", 0.02, "idx_less_clangers distribution")
+ggplot_hist(AFL.by.match.idx, "idx_goal_assist", 0.02, "idx_goal_assist distribution") + scale_x_continuous(limits = c(-0.6,0.6))
 ggplot_hist(AFL.by.match.idx, "idx_mark_kick", 0.02, "idx_mark_kick distribution") + scale_x_continuous(limits = c(-0.3,0.3))
 ggplot_hist(AFL.by.match.idx, "idx_50m_entry", 0.02, "idx_50m_entry distribution") + scale_x_continuous(limits = c(-0.7,0.7))
 ggplot_hist(AFL.by.match.idx, "idx_tackle", 0.02, "idx_tackle distribution") + scale_x_continuous(limits = c(-0.3,0.3))
+ggplot_hist(AFL.by.match.idx, "idx_one_pct", 0.02, "idx_one_pct distribution") + scale_x_continuous(limits = c(-0.4,0.4))
+ggplot_hist(AFL.by.match.idx, "idx_less_frees", 0.02, "idx_less_frees distribution") + scale_x_continuous(limits = c(-0.5,0.5))
 ```
 
 ## Statistical analysis of indices displaying a relationship
@@ -361,31 +364,73 @@ There were zero re-randomisations with a mean equal to or greater than the mean 
 We assume the probability of winning any match is random (0.5). Null hypothesis: idx_win_ground_ball has no impact to the match result so its true mean is 0; $H_0:\mu=0$. Let X be the random variable idx_win_ground_ball in Wins.
 
 Assuming $\sigma=s=0.054310$, $z_\bar{X} = (0.028146-\mu)/\sigma = (0.028146-0)/0.054310 = 0.52$
-This z-score corresponds to a probability of 0.6985 so we can be approximately 70% confident the idx_win_ground_ball result is significant to winning AFL matches.
+This z-score corresponds to a probability of 0.6985 so the team leading idx_win_ground_ball in an AFL match should win approximately 70% of the time **(Strong relationship)**.
 
 
 ## Statistical analysis of indices displaying a relationship (cont'd)
 
-### Re-randomization: idx_win_aerial_ball
+Performing the same two tests on the remaining indices yielded these results:
 
-Use the same re-randomized win/loss results from before.
+Index | Randomized Means > Idx Mean | Re-randomisation Test Result | Idx Z-score | Significance Test Result
+------------ | -------------------- | ------------------- | ----------- | ----------------------------------------------
+*idx_win_ground_ball* | *0* | *Index result is not random* | *0.52 (0.6985)* | *The team leading this index should win approx. 70% of the time (Strong)*
+idx_win_aerial_ball | 0 | Index result is not random | 0.33 (0.6293) | The team leading this index should win approx. 63% of the time **(Fair)**
+idx_clear_ball | 0 | Index result is not random | 0.27 (0.6064) | The team leading this index should win approx. 61% of the time **(Fair)**
+idx_less_clangers | 0 | Index result is not random | 0.30 (0.6179) | The team leading this index should win approx. 62% of the time **(Fair)**
+idx_goal_assist | 0 | Index result is not random | 0.12 (0.5478) | The team leading this index should win approx. 55% of the time **(Weak)**
+idx_mark_kick | 0 | Index result is not random | 0.19 (0.5753) | The team leading this index should win approx. 58% of the time **(Weak)**
+idx_50m_entry | 0 | Index result is not random | 0.45 (0.6736) | The team leading this index should win approx. 67% of the time **(Fair)**
+idx_tackle | 0 | Index result is not random | 0.16 (0.5636) | The team leading this index should win approx. 56% of the time **(Weak)**
+idx_one_pct | 0 | Index result is not random | 0.16 (0.5398) | The team leading this index should win approx. 54% of the time **(Weak)**
+idx_less_frees | 0 | Index result is not random | 0.06 (0.5239) | The team leading this index should win approx. 52% of the time **(Weak)**
 
-```{r statistics02a, eval=TRUE, echo=TRUE, warning=FALSE}
-Xbar <- AFL.by.match.idx %>% select(team_result, starts_with("idx_")) %>% group_by(team_result) %>% summarise(mean(idx_win_aerial_ball))
-print(as.list(AFL.by.match.idx.random.res %>% filter(team_result == 1 & (idx_win_aerial_ball <= Xbar[[2]][[1]] | idx_win_aerial_ball >= Xbar[[2]][[2]])) %>% count()))
+Interestingly, none of the indices tested as being random but most of them are fairly weak indicators of success if we regard the benchmark as being a 50% win rate.
+
+
+## Selecting indices for machine learning
+
+How strongly are the indices correlated with winning and with each other?
+
+```{r select01, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=5, fig.width=5}
+  AFL.by.match.idx.1 <- AFL.by.match.idx %>% select(-home_away, -ends_with("_win"), -ends_with(".opp"))
+  cormat <- round(cor(AFL.by.match.idx.1 %>% select(-Year, -match_id, -Team, -round, -match_score_idx) %>% mutate(team_result = as.numeric(team_result))), 2)
+  cormat[lower.tri(cormat)]<- NA
+  cormat_melted <- melt(cormat, na.rm = TRUE)
+  ggplot(data = cormat_melted, aes(Var2, Var1, fill = value)) + geom_tile(color = "white") +
+    scale_fill_gradient2(low = "red", high = "blue", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation") +
+    theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8), axis.text.y = element_text(size = 8), axis.title = element_blank(),
+                            legend.title = element_text(size = 8), legend.text = element_text(size = 6), legend.key.size = unit(.3, "cm")) +
+    coord_fixed()
 ```
 
-There were zero re-randomisations with a mean equal to or greater than the mean of idx_win_aerial_ball for Wins, so the first test indicates the result is **not random**.
 
-### Significance test: idx_win_aerial_ball 
+## Selecting indices for machine learning (cont'd)
 
-```{r statistics02b, eval=TRUE, echo=TRUE, warning=FALSE}
-  print(as.data.frame(AFL.by.match.idx %>% group_by(team_result) %>% summarise(mean(idx_win_aerial_ball), sd(idx_win_aerial_ball), n())))
+Which indices are worth exploring further through machine learning and modelling?
+
+```{r select02, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=4.5, fig.width=5}
+  AFL.by.match.idx.1.tidy <- AFL.by.match.idx.1 %>% arrange(match_id) %>% 
+  select(-round, -Team, -match_score_idx) %>% filter(team_result == 1) %>% gather(key, value, -Year, -match_id, -team_result)
+
+  ggplot(AFL.by.match.idx.1.tidy %>% filter(!(key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) +
+  geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 3) + geom_hline(yintercept = 0, size = 1, col = "blue") +
+  theme(axis.text.x = element_text(size = 6, angle = 90))
+```
+```{r select03, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=3, fig.width=5}
+  ggplot(AFL.by.match.idx.1.tidy %>% filter((key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) +
+  geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 2) + geom_hline(yintercept = 0, size = 1, col = "blue") +
+  theme(axis.text.x = element_text(size = 6, angle = 90))
 ```
 
-Null hypothesis: idx_win_aerial_ball has no impact to the match result so its true mean is 0; $H_0:\mu=0$. Let X be the random variable idx_win_aerial_ball in Wins.
 
-Assuming $\sigma=s=0.237117$, $z_\bar{X} = (0.079087-\mu)/\sigma = (0.079087-0)/0.237117 = 0.33$
-This z-score corresponds to a probability of 0.6293 so we can be approximately 63% confident the idx_win_aerial_ball result is significant to winning AFL matches.
+## Selecting indices for machine learning (cont'd)
 
+The indices with the strongest statistical and visual relationship to wins are:
 
+- idx_win_ground_ball
+- idx_win_aerial_ball
+- idx_clear_ball
+- idx_50m_entry
+- idx_less_clangers
+
+I have also included idx_less_frees as it displays some correlation with idx_win_ground_ball and idx_less_clangers. These indices will need some feature engineering to boost their performance in predictive modelling so some deep-dive analysis is required.
