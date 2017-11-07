@@ -1,5 +1,7 @@
 library(dplyr)
+library(tidyr)
 library(ggplot2)
+library(zoo)
 
 
 
@@ -135,10 +137,77 @@ ggplot_hist(AFL.by.match.idx, "idx_win_ground_ball", 0.02, "blah")
 
 
 
+# margin by home/away
+ggplot(AFL.by.match.idx, aes(x = factor(home_away), y = match_score_idx)) +
+  geom_jitter() +   geom_hline(yintercept = 1, size = 0.8, col = "red")
 
 
 
 
+
+
+# tidy
+AFL.by.match.idx.tidy <- AFL.by.match.idx %>% select(-ends_with("_win"), -Team.opp, -match_score_idx.opp, -home_away) %>% 
+  gather(key, value, -Year, -round, -match_id, -Team, -team_result, -match_score_idx)
+
+# idx by score margin
+ggplot(AFL.by.match.idx.tidy, aes(x = value, y = match_score_idx)) +
+  geom_point(position = position_jitter(width = 0.01), alpha = 0.6, shape = 1) +
+  geom_hline(yintercept = 1, size = 0.6, col = "blue") +
+  geom_vline(xintercept = 0, size = 0.6, col = "blue") +
+  geom_rug(sides = "r", alpha = 0.1, size = 0.05) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  facet_wrap(~ key, nrow = 2) +
+  theme(legend.position = "none")
+  
+
+
+
+# Match-wise indices 2: combined indices
+# removed: idx_goal_assist
+AFL.by.match.idx.2 <- AFL.by.match.idx %>% mutate(round = paste(Year, round, sep = "-")) %>% 
+  select(-Year, -match_id, -home_away, -ET_win, -ends_with(".opp")) %>% 
+  arrange(Team, round) %>%
+  transmute(Team, round, Q1_win, Q2_win, Q3_win, Q4_win, team_result, match_score_idx,
+            idx_win_the_ball = 1 + 100 * idx_win_ground_ball * idx_win_aerial_ball * idx_clear_ball, 
+            idx_use_the_ball = 1 + 100 * idx_less_clangers * idx_mark_kick * idx_50m_entry,
+            idx_discipline = 1 + 100 * idx_tackle * idx_one_pct * idx_less_frees)
+
+cor( AFL.by.match.idx.2 %>% select(-Team, -round) %>%
+    mutate(team_result = as.numeric(team_result),
+           Q1_win = as.numeric(Q1_win), Q2_win = as.numeric(Q2_win), Q3_win = as.numeric(Q3_win), Q4_win = as.numeric(Q4_win) ) )
+
+AFL.by.match.idx.2.tidy <- AFL.by.match.idx.2 %>%
+  gather(key, value, -round, -Team, -team_result) %>% arrange(Team, round, key)
+
+ggplot(AFL.by.match.idx.2.tidy %>% filter(Team %in% c("St Kilda","Sydney") & substr(round, 1, 4) %in% c("2016","2017") ), aes(x = round, y = value)) +
+  geom_line(aes(group = key, col = key)) +
+  facet_wrap(~ Team, nrow = 3)
+  
+
+
+
+
+
+  
+transmute(round, match_id, home_away, team_result, Q1_win, Q2_win, Q3_win, Q4_win, ET_win, match_score_idx, Team.opp, match_score_idx.opp,
+  mutate(idx_win_the_ball.3 = 100*rollmean(idx_win_the_ball, 3, align = "right", fill = NA),
+         idx_use_the_ball.3 = 100*rollmean(idx_use_the_ball, 3, align = "right", fill = NA),
+         idx_discipline.3 = 100*rollmean(idx_discipline, 3, align = "right", fill = NA))
+
+AFL.by.match.idx.2.tidy <- AFL.by.match.idx.2 %>%
+  gather(key, value, -Year, -round, -match_id, -Team, -team_result, -match_score_idx, -ends_with("_win"), -Team.opp, -match_score_idx.opp, -home_away)
+
+# idx 2 by score margin
+ggplot(AFL.by.match.idx.2.tidy, aes(x = value, y = match_score_idx)) +
+  geom_point(col = "black", fill = "black", alpha = 0.2, shape = 19) +
+  geom_hline(yintercept = 1, size = 0.6, col = "blue") +
+  geom_vline(xintercept = 0, size = 0.6, col = "blue") +
+  geom_rug(sides = "r", alpha = 0.1, size = 0.01) +
+  scale_x_continuous(limits = c(-0.02, 0.02)) +
+  scale_y_continuous(limits = c(0, 5)) +
+  facet_grid(. ~ key) +
+  theme(legend.position = "none")
 
 
 
