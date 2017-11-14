@@ -4,8 +4,9 @@ library(rpart.plot)
 library(ROCR)
 
 # improving performance by clustering  
-train1_Matrix = as.matrix(train1 %>% select(idx_win_ground_ball:Marks_inside_50))
-test1_Matrix = as.matrix(test1 %>% select(idx_win_ground_ball:Marks_inside_50))
+train1_Matrix = as.matrix(train1 %>% select(idx_win_ground_ball, idx_win_aerial_ball, idx_less_clangers, idx_50m_entry, idx_less_frees, Inside_50s))
+test1_Matrix = as.matrix(test1 %>% select(idx_win_ground_ball, idx_win_aerial_ball, idx_less_clangers, idx_50m_entry, idx_less_frees, Inside_50s))
+AFL.matches.2017.pred.sum.1_Matrix = as.matrix(AFL.matches.2017.pred.sum.1 %>% select(idx_win_ground_ball:Inside_50s))
 
 # assume 3x2=6 clusters (team: top, middle, bottom; strategy: fast, slow)
 k=6
@@ -17,6 +18,7 @@ train1_clusters = train1_kmc$cluster
 library(flexclust)
 train1_kcca = as.kcca(train1_kmc, train1_Matrix)
 test1_clusters = predict(train1_kcca, newdata = test1_Matrix)
+AFL.matches.2017.pred.sum.1_clusters = predict(train1_kcca, newdata = AFL.matches.2017.pred.sum.1_Matrix)
 
 train1_clust1 = subset(train1, train1_clusters==1)  
 train1_clust2 = subset(train1, train1_clusters==2)    
@@ -32,6 +34,13 @@ test1_clust4 = subset(test1, test1_clusters==4)
 test1_clust5 = subset(test1, test1_clusters==5)  
 test1_clust6 = subset(test1, test1_clusters==6)
 
+pred2017_clust1 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==1)
+pred2017_clust2 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==2)
+pred2017_clust3 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==3)
+pred2017_clust4 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==4)
+pred2017_clust5 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==5)
+pred2017_clust6 = subset(AFL.matches.2017.pred.sum.1, AFL.matches.2017.pred.sum.1_clusters==6)
+
 
 # BUILD DECISION TREES
 
@@ -40,125 +49,125 @@ library(e1071)
   # cluster 1
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-        data = train1_clust1, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.02
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+        data = train1_clust1, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.05
   
-  tree_clust1 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust1, method = "class", control = rpart.control(cp = 0.03)) #altered cp
+  tree_clust1 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust1, method = "class", control = rpart.control(cp = 0.02)) #altered cp
   prp(tree_clust1, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
   table(test1_clust1$team_result, predict(tree_clust1, newdata = test1_clust1, type = "prob")[,2] > 0.5)
-  45/66 #0.68
-  pred_tree_clust1 = prediction(predict(tree_clust1, newdata = test1_clust1)[ ,2], test1_clust1$team_result) # note: changing threshold to 0.6 did not improve results
+  46/51 #0.90
+  pred_tree_clust1 = prediction(predict(tree_clust1, newdata = test1_clust1)[ ,2], test1_clust1$team_result) # note: changing threshold did not improve results
   perf_tree_clust1 = performance(pred_tree_clust1, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust1, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust1, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.65
-    text(0.9, 0.22, labels = paste("Class accuracy = ", round(45/66,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust1, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.87
+    text(0.9, 0.22, labels = paste("Class accuracy = ", round(46/51,2)*100, "%", sep=""), adj=1, cex = 1.5)
 
   # cluster 2
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-        data = train1_clust2, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.02
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+        data = train1_clust2, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.034
   
-  tree_clust2 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust2, method = "class", control = rpart.control(cp = 0.02))
+  tree_clust2 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust2, method = "class", control = rpart.control(cp = 0.034))
   prp(tree_clust2, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
   table(test1_clust2$team_result, predict(tree_clust2, newdata = test1_clust2, type = "prob")[,2] > 0.5)
-  65/93 #0.70
-  pred_tree_clust2 = prediction(predict(tree_clust2, newdata = test1_clust2)[ ,2], test1_clust2$team_result) # note: changing threshold to 0.6 did not improve results
+  55/66 #0.83
+  pred_tree_clust2 = prediction(predict(tree_clust2, newdata = test1_clust2)[ ,2], test1_clust2$team_result) # note: changing threshold did not improve results
   perf_tree_clust2 = performance(pred_tree_clust2, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust2, col="blue", main="ROC Curve for Decision Tree - Cluster 2", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust2, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.62
-    text(0.9, 0.22, labels = paste("Class accuracy = ", round(65/93,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust2, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.59
+    text(0.9, 0.22, labels = paste("Class accuracy = ", round(55/66,2)*100, "%", sep=""), adj=1, cex = 1.5)
 
   # cluster 3
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.0001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
         data = train1_clust3, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.005
   
-  tree_clust3 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust3, method = "class", control = rpart.control(cp = 0.016)) #altered cp
+  tree_clust3 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust3, method = "class", control = rpart.control(cp = 0.02)) #altered cp
   prp(tree_clust3, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
   table(test1_clust3$team_result, predict(tree_clust3, newdata = test1_clust3, type = "prob")[,2] > 0.5)
-  59/86 #0.69
-  pred_tree_clust3 = prediction(predict(tree_clust3, newdata = test1_clust3)[ ,2], test1_clust3$team_result) # note: changing threshold to 0.7 did not improve results
+  49/61 #0.80
+  pred_tree_clust3 = prediction(predict(tree_clust3, newdata = test1_clust3)[ ,2], test1_clust3$team_result) # note: changing threshold did not improve results
   perf_tree_clust3 = performance(pred_tree_clust3, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust3, col="blue", main="ROC Curve for Decision Tree - Cluster 3", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust3, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.63
-    text(0.9, 0.22, labels = paste("Class accuracy = ", round(59/86,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust3, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.83
+    text(0.9, 0.22, labels = paste("Class accuracy = ", round(49/61,2)*100, "%", sep=""), adj=1, cex = 1.5)
 
   # cluster 4
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-        data = train1_clust4, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.005
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+        data = train1_clust4, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.007
   
-  tree_clust4 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust4, method = "class", control = rpart.control(cp = 0.02)) #altered cp
+  tree_clust4 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust4, method = "class", control = rpart.control(cp = 0.01)) #altered cp
   prp(tree_clust4, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
   table(test1_clust4$team_result, predict(tree_clust4, newdata = test1_clust4, type = "prob")[,2] > 0.5)
-  45/47 #0.96
-  pred_tree_clust4 = prediction(predict(tree_clust4, newdata = test1_clust4)[ ,2], test1_clust4$team_result) # note: changing threshold to 0.9 did not improve results
+  63/83 #0.76
+  pred_tree_clust4 = prediction(predict(tree_clust4, newdata = test1_clust4)[ ,2], test1_clust4$team_result) # note: changing threshold did not improve results
   perf_tree_clust4 = performance(pred_tree_clust4, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust4, col="blue", main="ROC Curve for Decision Tree - Cluster 4", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust4, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.98
-    text(0.9, 0.22, labels = paste("Class accuracy = ", round(45/47,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust4, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.78
+    text(0.9, 0.22, labels = paste("Class accuracy = ", round(63/83,2)*100, "%", sep=""), adj=1, cex = 1.5)
 
   # cluster 5
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-        data = train1_clust5, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.041
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+        data = train1_clust5, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.005
   
-  tree_clust5 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust5, method = "class", control = rpart.control(cp = 0.04)) #altered cp
+  tree_clust5 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust5, method = "class", control = rpart.control(cp = 0.019)) #altered cp
   prp(tree_clust5, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
-  table(test1_clust5$team_result, predict(tree_clust5, newdata = test1_clust5, type = "prob")[,2] > 0.3)
-  52/64 #0.81
-  pred_tree_clust5 = prediction(predict(tree_clust5, newdata = test1_clust5)[ ,2], test1_clust5$team_result) # note: changing threshold to 0.3 makes sense here
+  table(test1_clust5$team_result, predict(tree_clust5, newdata = test1_clust5, type = "prob")[,2] > 0.7)
+  62/88 #0.69
+  pred_tree_clust5 = prediction(predict(tree_clust5, newdata = test1_clust5)[ ,2], test1_clust5$team_result) # note: changing threshold to 0.7 makes sense here
   perf_tree_clust5 = performance(pred_tree_clust5, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust5, col="blue", main="ROC Curve for Decision Tree - Cluster 5", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust5, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.57
-    text(0.9, 0.22, labels = paste("Class accuracy = ", round(52/64,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust5, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.65
+    text(0.9, 0.22, labels = paste("Class accuracy = ", round(62/88,2)*100, "%", sep=""), adj=1, cex = 1.5)
     
   # cluster 6
   fitControl = trainControl(method = "cv", number = 10)
   cpGrid = expand.grid(.cp=(1:50)*0.001)
-  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-        data = train1_clust6, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.042
+  train(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+        data = train1_clust6, method = "rpart", trControl = fitControl, tuneGrid = cpGrid) #0.038
   
-  tree_clust6 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Clangers + Clearances + Contested_marks + Contested_possessions + Frees_against + Inside_50s + Marks_inside_50,
-                      data = train1_clust6, method = "class", control = rpart.control(cp = 0.02)) #altered cp
+  tree_clust6 = rpart(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
+                      data = train1_clust6, method = "class", control = rpart.control(cp = 0.038))
   prp(tree_clust6, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
-  table(test1_clust6$team_result, predict(tree_clust6, newdata = test1_clust6, type = "prob")[,2] > 0.3)
-  44/52 #0.85
-  pred_tree_clust6 = prediction(predict(tree_clust6, newdata = test1_clust6)[ ,2], test1_clust6$team_result) # note: changing threshold to 0.3 makes sense here
+  table(test1_clust6$team_result, predict(tree_clust6, newdata = test1_clust6, type = "prob")[,2] > 0.5)
+  50/59 #0.85
+  pred_tree_clust6 = prediction(predict(tree_clust6, newdata = test1_clust6)[ ,2], test1_clust6$team_result) # note: changing threshold did not improve results
   perf_tree_clust6 = performance(pred_tree_clust6, "tpr", "fpr")
     par(cex = 0.6)
     plot(perf_tree_clust6, col="blue", main="ROC Curve for Decision Tree - Cluster 6", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust6, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.71
+    text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust6, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.76
     text(0.9, 0.22, labels = paste("Class accuracy = ", round(44/52,2)*100, "%", sep=""), adj=1, cex = 1.5)  
 
 
 # BUILD LOGISTIC REGRESSIONS
   # cluster 1
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust1, family = binomial)
   summary(log_clustx)
   # remove variables one by one until all significant, then check multicollinearity
-  log_clust1 = glm(team_result ~ idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
+  log_clust1 = glm(team_result ~ idx_win_ground_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust1, family = binomial)
   summary(log_clust1)
   cor(train1_clust1 %>% transmute(team_result = as.numeric(team_result), idx_less_frees, idx_win_ground_ball, idx_less_clangers, idx_50m_entry, Inside_50s))
@@ -170,21 +179,21 @@ library(e1071)
     
     # test accuracy
     pred_log_clust1 = predict(log_clust1, type = "response", newdata = test1_clust1)
-    table(test1_clust1$team_result, pred_log_clust1 >= 0.5)
-    49/66 #0.74
+    table(test1_clust1$team_result, pred_log_clust1 >= 0.2)
+    46/51 #0.90
     pred_log_clust1R = prediction(pred_log_clust1, as.factor(test1_clust1$team_result))
     # plot ROC curve
     perf_log_clust1R = performance(pred_log_clust1R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust1R, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust1R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.81
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(49/66,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust1R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.93
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(46/51,2)*100, "%", sep=""), adj=1, cex = 1.5)  
 
   # cluster 2
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust2, family = binomial)
   
-  log_clust2 = glm(team_result ~ idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
+  log_clust2 = glm(team_result ~ idx_win_ground_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust2, family = binomial)
   summary(log_clust2)
   cor(train1_clust2 %>% transmute(team_result = as.numeric(team_result), idx_less_frees, idx_win_ground_ball, idx_less_clangers, idx_50m_entry, Inside_50s))
@@ -196,18 +205,18 @@ library(e1071)
     
     # test accuracy
     pred_log_clust2 = predict(log_clust2, type = "response", newdata = test1_clust2)
-    table(test1_clust2$team_result, pred_log_clust2 >= 0.5)
-    66/93 #0.71
+    table(test1_clust2$team_result, pred_log_clust2 >= 0.7)
+    55/66 #0.83
     pred_log_clust2R = prediction(pred_log_clust2, as.factor(test1_clust2$team_result))
     # plot ROC curve
     perf_log_clust2R = performance(pred_log_clust2R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust2R, col="blue", main="ROC Curve for Logistic Regression - Cluster 2", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust2R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.75
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(66/93,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust2R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.89
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(55/66,2)*100, "%", sep=""), adj=1, cex = 1.5)
 
   # cluster 3
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust3, family = binomial)
   
   log_clust3 = glm(team_result ~ idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
@@ -222,18 +231,18 @@ library(e1071)
     
     # test accuracy
     pred_log_clust3 = predict(log_clust3, type = "response", newdata = test1_clust3)
-    table(test1_clust3$team_result, pred_log_clust3 >= 0.5)
-    60/86 #0.70
+    table(test1_clust3$team_result, pred_log_clust3 >= 0.4)
+    46/61 #0.75
     pred_log_clust3R = prediction(pred_log_clust3, as.factor(test1_clust3$team_result))
     # plot ROC curve
     perf_log_clust3R = performance(pred_log_clust3R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust3R, col="blue", main="ROC Curve for Logistic Regression - Cluster 3", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust3R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.77
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(60/86,2)*100, "%", sep=""), adj=1, cex = 1.5)      
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust3R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.84
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(46/61,2)*100, "%", sep=""), adj=1, cex = 1.5)      
 
   # cluster 4
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust4, family = binomial)
   
   log_clust4 = glm(team_result ~ idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
@@ -248,21 +257,21 @@ library(e1071)
     
     # test accuracy
     pred_log_clust4 = predict(log_clust4, type = "response", newdata = test1_clust4)
-    table(test1_clust4$team_result, pred_log_clust4 >= 0.7)
-    44/47 #0.94
+    table(test1_clust4$team_result, pred_log_clust4 >= 0.4)
+    62/83 #0.75
     pred_log_clust4R = prediction(pred_log_clust4, as.factor(test1_clust4$team_result))
     # plot ROC curve
     perf_log_clust4R = performance(pred_log_clust4R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust4R, col="blue", main="ROC Curve for Logistic Regression - Cluster 4", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust4R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.89
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(44/47,2)*100, "%", sep=""), adj=1, cex = 1.5)      
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust4R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.81
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(62/83,2)*100, "%", sep=""), adj=1, cex = 1.5)      
 
   # cluster 5
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust5, family = binomial)
   
-  log_clust5 = glm(team_result ~ Clearances + Clangers + idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
+  log_clust5 = glm(team_result ~ idx_win_ground_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust5, family = binomial)
   summary(log_clust5)
   cor(train1_clust5 %>% transmute(team_result = as.numeric(team_result), idx_less_frees, idx_win_ground_ball, idx_less_clangers, idx_50m_entry, Inside_50s))
@@ -274,21 +283,21 @@ library(e1071)
     
     # test accuracy
     pred_log_clust5 = predict(log_clust5, type = "response", newdata = test1_clust5)
-    table(test1_clust5$team_result, pred_log_clust5 >= 0.3)
-    55/64 #0.86
+    table(test1_clust5$team_result, pred_log_clust5 >= 0.7)
+    64/88 #0.73
     pred_log_clust5R = prediction(pred_log_clust5, as.factor(test1_clust5$team_result))
     # plot ROC curve
     perf_log_clust5R = performance(pred_log_clust5R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust5R, col="blue", main="ROC Curve for Logistic Regression - Cluster 5", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust5R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.91
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(55/64,2)*100, "%", sep=""), adj=1, cex = 1.5)      
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust5R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.72
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(64/88,2)*100, "%", sep=""), adj=1, cex = 1.5)      
 
   # cluster 6
-  log_clustx = glm(team_result ~ Contested_marks + Clearances + Contested_possessions + Clangers + idx_win_aerial_ball + Marks_inside_50 + idx_less_frees + idx_win_ground_ball + idx_clear_ball + idx_less_clangers + idx_50m_entry + Frees_against + Inside_50s,
+  log_clustx = glm(team_result ~ idx_win_ground_ball + idx_win_aerial_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust6, family = binomial)
   
-  log_clust6 = glm(team_result ~ idx_win_aerial_ball + idx_less_frees + idx_win_ground_ball + idx_less_clangers + idx_50m_entry + Inside_50s,
+  log_clust6 = glm(team_result ~ idx_win_ground_ball + idx_less_clangers + idx_50m_entry + idx_less_frees + Inside_50s,
                    data = train1_clust6, family = binomial)
   summary(log_clust6)
   cor(train1_clust6 %>% transmute(team_result = as.numeric(team_result), idx_less_frees, idx_win_ground_ball, idx_less_clangers, idx_50m_entry, Inside_50s))
@@ -300,12 +309,153 @@ library(e1071)
     
     # test accuracy
     pred_log_clust6 = predict(log_clust6, type = "response", newdata = test1_clust6)
-    table(test1_clust6$team_result, pred_log_clust6 >= 0.4)
-    44/52 #0.85
+    table(test1_clust6$team_result, pred_log_clust6 >= 0.5)
+    50/59 #0.85
     pred_log_clust6R = prediction(pred_log_clust6, as.factor(test1_clust6$team_result))
     # plot ROC curve
     perf_log_clust6R = performance(pred_log_clust6R, "tpr", "fpr")
       par(cex = 0.6)
       plot(perf_log_clust6R, col="blue", main="ROC Curve for Logistic Regression - Cluster 6", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
-      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust6R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.85
-      text(0.9, 0.22, labels = paste("Class accuracy = ", round(44/52,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust6R, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.84
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(50/59,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+      
+      
+## TEST 2017 PREDICTED DATA
+  
+  # DECISION TREE
+      
+    # cluster 1
+      table(pred2017_clust1$team_result, predict(tree_clust1, newdata = pred2017_clust1, type = "prob")[,2] > 0.5)
+      11/11 #1.00
+      pred_tree_clust1_2017 = prediction(predict(tree_clust1, newdata = pred2017_clust1)[ ,2], pred2017_clust1$team_result)
+      perf_tree_clust1_2017 = performance(pred_tree_clust1_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust1_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust1_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #1.00
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(11/11,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      
+    # cluster 2
+      table(pred2017_clust2$team_result, predict(tree_clust2, newdata = pred2017_clust2, type = "prob")[,2] > 0.5)
+      11/17 #0.65
+      pred_tree_clust2_2017 = prediction(predict(tree_clust2, newdata = pred2017_clust2)[ ,2], pred2017_clust2$team_result)
+      perf_tree_clust2_2017 = performance(pred_tree_clust2_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust2_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust2_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.50
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(11/17,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      
+    # cluster 3
+      table(pred2017_clust3$team_result, predict(tree_clust3, newdata = pred2017_clust3, type = "prob")[,2] > 0.5)
+      29/43 #0.67
+      pred_tree_clust3_2017 = prediction(predict(tree_clust3, newdata = pred2017_clust3)[ ,2], pred2017_clust3$team_result)
+      perf_tree_clust3_2017 = performance(pred_tree_clust3_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust3_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust3_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.65
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(29/43,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      
+    # cluster 4
+      table(pred2017_clust4$team_result, predict(tree_clust4, newdata = pred2017_clust4, type = "prob")[,2] > 0.5)
+      86/133 #0.65
+      pred_tree_clust4_2017 = prediction(predict(tree_clust4, newdata = pred2017_clust4)[ ,2], pred2017_clust4$team_result)
+      perf_tree_clust4_2017 = performance(pred_tree_clust4_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust4_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust4_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.65
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(86/133,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      
+    # cluster 5
+      table(pred2017_clust5$team_result, predict(tree_clust5, newdata = pred2017_clust5, type = "prob")[,2] > 0.5)
+      94/146 #0.64
+      pred_tree_clust5_2017 = prediction(predict(tree_clust5, newdata = pred2017_clust5)[ ,2], pred2017_clust5$team_result)
+      perf_tree_clust5_2017 = performance(pred_tree_clust5_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust5_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust5_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.63
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(94/146,2)*100, "%", sep=""), adj=1, cex = 1.5)
+    
+    # cluster 6
+      table(pred2017_clust6$team_result, predict(tree_clust6, newdata = pred2017_clust6, type = "prob")[,2] > 0.7)
+      42/64 #0.66
+      pred_tree_clust6_2017 = prediction(predict(tree_clust6, newdata = pred2017_clust6)[ ,2], pred2017_clust6$team_result)
+      perf_tree_clust6_2017 = performance(pred_tree_clust6_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_tree_clust6_2017, col="blue", main="ROC Curve for Decision Tree - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_tree_clust6_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.66
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(42/64,2)*100, "%", sep=""), adj=1, cex = 1.5)
+      
+  # LOGISTIC REGRESSION
+      
+    # cluster 1
+      pred_log_clust1_2017 = predict(log_clust1, type = "response", newdata = pred2017_clust1)
+      table(pred2017_clust1$team_result, pred_log_clust1_2017 >= 0.5)
+      10/11 #0.91
+      pred_log_clust1R_2017 = prediction(pred_log_clust1_2017, as.factor(pred2017_clust1$team_result))
+      # plot ROC curve
+      perf_log_clust1R_2017 = performance(pred_log_clust1R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust1R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust1R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.94
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(10/11,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+    # cluster 2
+      pred_log_clust2_2017 = predict(log_clust2, type = "response", newdata = pred2017_clust2)
+      table(pred2017_clust2$team_result, pred_log_clust2_2017 >= 0.9)
+      12/17 #0.71
+      pred_log_clust2R_2017 = prediction(pred_log_clust2_2017, as.factor(pred2017_clust2$team_result))
+      # plot ROC curve
+      perf_log_clust2R_2017 = performance(pred_log_clust2R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust2R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust2R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.76
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(12/17,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+    # cluster 3
+      pred_log_clust3_2017 = predict(log_clust3, type = "response", newdata = pred2017_clust3)
+      table(pred2017_clust3$team_result, pred_log_clust3_2017 >= 0.4)
+      31/43 #0.72
+      pred_log_clust3R_2017 = prediction(pred_log_clust3_2017, as.factor(pred2017_clust3$team_result))
+      # plot ROC curve
+      perf_log_clust3R_2017 = performance(pred_log_clust3R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust3R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust3R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.6
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(31/43,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+    # cluster 4
+      pred_log_clust4_2017 = predict(log_clust4, type = "response", newdata = pred2017_clust4)
+      table(pred2017_clust4$team_result, pred_log_clust4_2017 >= 0.4)
+      85/133 #0.64
+      pred_log_clust4R_2017 = prediction(pred_log_clust4_2017, as.factor(pred2017_clust4$team_result))
+      # plot ROC curve
+      perf_log_clust4R_2017 = performance(pred_log_clust4R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust4R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust4R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.62
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(85/133,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+    # cluster 5
+      pred_log_clust5_2017 = predict(log_clust5, type = "response", newdata = pred2017_clust5)
+      table(pred2017_clust5$team_result, pred_log_clust5_2017 >= 0.4)
+      90/146 #0.62
+      pred_log_clust5R_2017 = prediction(pred_log_clust5_2017, as.factor(pred2017_clust5$team_result))
+      # plot ROC curve
+      perf_log_clust5R_2017 = performance(pred_log_clust5R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust5R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust5R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.57
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(90/146,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      
+    # cluster 6
+      pred_log_clust6_2017 = predict(log_clust6, type = "response", newdata = pred2017_clust6)
+      table(pred2017_clust6$team_result, pred_log_clust6_2017 >= 0.6)
+      45/64 #0.70
+      pred_log_clust6R_2017 = prediction(pred_log_clust6_2017, as.factor(pred2017_clust6$team_result))
+      # plot ROC curve
+      perf_log_clust6R_2017 = performance(pred_log_clust6R_2017, "tpr", "fpr")
+      par(cex = 0.6)
+      plot(perf_log_clust6R_2017, col="blue", main="ROC Curve for Logistic Regression - Cluster 1", print.cutoffs.at = seq(0, 1, 0.1), text.adj = c(-0.2, 1.7))
+      text(0.9, 0.4, labels = paste("AUC = ", round(as.numeric(performance(pred_log_clust6R_2017, "auc")@y.values),2),sep=""), adj=1, cex = 1.5) #0.75
+      text(0.9, 0.22, labels = paste("Class accuracy = ", round(45/64,2)*100, "%", sep=""), adj=1, cex = 1.5)  
+      

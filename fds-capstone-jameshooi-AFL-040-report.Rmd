@@ -1,5 +1,5 @@
 ---
-title: "AFL: Player attribute influence on results"
+title: "Australian Football League: How to win"
 subtitle: "Report - draft"
 author: James Hooi
 css: ioslides.css
@@ -27,13 +27,17 @@ knitr::opts_chunk$set(echo = FALSE)
   load(file=".\\team_results.Rda")
 ```
 
-## Revisit: Purpose & Objective
+## Sport is about *Winning*
+
+Since the story of Moneyball and the Oakland A's became public, sport has begun a data-driven revolution. Elite sport is about winning and commercial success, and both are closely linked. Data analysis is giving teams the competitive edge in elite competition to "control the controllables" and tilt the game in their favour.
+
+This analysis sets out to link Australian Football League (AFL) player performance with team results. My core hypothesis is that these links can identify **how to win** matches and **predict match results** for a season.
+
+## Purpose & Objective
 **As coach, how can I build, select or train my AFL team to maximise success?** (game snippet: [youtube.com/watch?v=QH188gSGnsk](https://www.youtube.com/watch?v=QH188gSGnsk))
 <div style="margin-left:-50px; margin-top:0px; margin-bottom:-60px">
 <img src="AFL_graphics1080x441.png"></img>
 </div>
-### Hypothesis
-The core hypothesis of the analysis is that **AFL player performance data** recorded from competitive matches can be used to identify key success criteria and in turn **predict match results**.
 
 ## Data sources and key variables
 Data on the most recent 15 AFL seasons have been wrangled into two data frames:
@@ -49,11 +53,11 @@ Detailed steps on scraping and wrangling can be found in this report: [rawgit.co
 ```
 
 
-## Functions for base exploratory analysis
-To explore range, median and interquartile range of player metrics, the following functions are defined:
+<!-- ## Functions for base exploratory analysis -->
+<!-- To explore range, median and interquartile range of player metrics, the following functions are defined: -->
 
-```{r plotfns, eval=TRUE, echo=TRUE, warning=FALSE}
-  pos.d = position_dodge(width = 0.3)
+```{r plotfns, eval=TRUE, echo=FALSE, warning=FALSE}
+  pos.d = position_dodge(width = 0.35)
   
   # stat function to find range of plot
   plot_range = function(x){ data.frame(ymin = min(x), ymax = max(x)) }
@@ -64,16 +68,16 @@ To explore range, median and interquartile range of player metrics, the followin
   # template line range plot, dummy variable for x, parameter for y, split out wins/losses and facet by year
   plot_linerange_by_year = function(in_df, yvar, plot_title, plot_caption){
     ggp = ggplot(in_df, aes_string(x=1, y=yvar, col="team_result")) +
-      stat_summary(geom = "linerange", fun.data = plot_med_IQR, position = pos.d, size = 1.2, alpha = 0.6) +
-      stat_summary(geom = "linerange", fun.data = plot_range, position = pos.d, size = 1.2, alpha = 0.3) +
+      stat_summary(geom = "linerange", fun.data = plot_med_IQR, position = pos.d, size = 0.8, alpha = 0.6) +
+      stat_summary(geom = "linerange", fun.data = plot_range, position = pos.d, size = 0.8, alpha = 0.3) +
       scale_colour_manual(labels = c("Loss or draw","Win"), values = c("red","blue")) +
-      stat_summary(geom = "point", fun.y = median, position = pos.d, size = 1.5, shape = 15, alpha = 0.9) +
+      stat_summary(geom = "point", fun.y = median, position = pos.d, size = 1.1, shape = 15, alpha = 0.9) +
       facet_grid(. ~ Year) +
       labs(title = plot_title, color = "Result", caption = plot_caption) +
       theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank()
             , axis.title.y = element_blank(), axis.text.y = element_text(size = 6), legend.position = "none"
-            , strip.text.x = element_text(size = 7, angle = 90)
-            , plot.title = element_text(size = 9), plot.caption = element_text(size = 7))
+            , strip.text.x = element_text(size = 6.5, angle = 90)
+            , plot.title = element_text(size = 8), plot.caption = element_text(size = 7))
     print(ggp)
   }
 ```
@@ -100,49 +104,42 @@ Aggregate player data by team showing match result:
   head(AFL.by.team, 3)
 ```
 
-## Exploratory plots - base metrics (pg.1 of 4)
+## Exploratory plots - base metrics (pg.1 of 3)
 Metrics by year, showing median, IQR and range (Red/LHS = loss or draw, Blue/RHS = win):
 
-```{r exploreplot01, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=3.4}
-  plot_linerange_by_year(AFL.by.player, "Played_pct","Player: % game time", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Behinds","Team: Behinds (1 point)", "Positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Bounces","Team: Running Bounces", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Clangers","Team: Clangers (errors)", "Slight negative relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Clearances","Team: Clearances (clear disputed ball to advantage)", "Slight positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Contested_marks","Team: Contested marks (catch vs opponents)", "Slight positive relationship to wins")
+```{r exploreplot01, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=2.55}
+  plot_linerange_by_year(AFL.by.team, "Behinds","Behinds (1 point)", "65.9% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Bounces","Running Bounces", "57.1% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Clangers","Clangers (errors)", "58.7% confident win/loss difference negative")
+  plot_linerange_by_year(AFL.by.team, "Clearances","Clearances (disputed ball to advantage)", "59.9% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Contested_marks","Contested marks (catch vs opponents)", "62.2% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Contested_possessions","Contested possessions (gather-dispose)", "62.9% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Disposals","Disposals (handball or kick)", "69.9% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Frees","Free kicks awarded", "52.4% confident win/loss difference positive")
 ```
 
-## Exploratory plots - base metrics (pg.2 of 4)
+## Exploratory plots - base metrics (pg.2 of 3)
 Metrics by year, showing median, IQR and range (Red/LHS = loss or draw, Blue/RHS = win):
 
-```{r exploreplot02, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=3.4}
-  plot_linerange_by_year(AFL.by.team, "Contested_possessions","Team: Contested possessions (gather & dispose)", "Slight positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Disposals","Team: Disposals (handball or kick)", "Positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Frees","Team: Free kicks awarded", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Frees_against","Team: Free kicks given away", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Goal_assists","Team: Goal assists", "Positive relationship to wins (obvious)")
-  plot_linerange_by_year(AFL.by.team, "Goals","Team: Goals (6 points)","Positive relationship to wins (obvious)")
+```{r exploreplot02, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=2.55}
+  plot_linerange_by_year(AFL.by.team, "Frees_against","Free kicks given away", "52.0% confident win/loss difference negative")
+  plot_linerange_by_year(AFL.by.team, "Goal_assists","Goal assists", "81.3% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Goals","Goals (6 points)","87.1% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Handballs","Handballs", "57.5% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Hit_outs","Hit-outs (win ball-up tap)", "53.6% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Inside_50s","Inside 50s (ball enters 50m arc)", "77.9% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Kicks","Kicks", "79.1% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Marks","Marks (catches)", "68.1% confident win/loss difference positive")
 ```
 
-## Exploratory plots - base metrics (pg.3 of 4)
+## Exploratory plots - base metrics (pg.3 of 3)
 Metrics by year, showing median, IQR and range (Red/LHS = loss or draw, Blue/RHS = win):
 
-```{r exploreplot03, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=3.4}
-  plot_linerange_by_year(AFL.by.team, "Handballs","Team: Handballs", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Hit_outs","Team: Hit-outs (win ball-up tap)", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Inside_50s","Team: Inside 50s (ball enters 50m arc)", "Positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Kicks","Team: Kicks", "Positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Marks","Team: Marks (catches)", "Slight positive relationship to wins")
-  plot_linerange_by_year(AFL.by.team, "Marks_inside_50","Team: Marks inside 50 (catch inside 50m arc)","Positive relationship to wins")
-```
-
-## Exploratory plots - base metrics (pg.4 of 4)
-Metrics by year, showing median, IQR and range (Red/LHS = loss or draw, Blue/RHS = win):
-
-```{r exploreplot04, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=3.4}
-  plot_linerange_by_year(AFL.by.team, "One_pct","Team: 1 percenters (low-percentage play success)", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Tackles","Team: Tackles", "No clear relationship")
-  plot_linerange_by_year(AFL.by.team, "Uncontested_possessions","Team: Uncontested possessions (receive & dispose)", "Slight positive relationship to wins")
+```{r exploreplot03, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.4, fig.width=2.55}
+  plot_linerange_by_year(AFL.by.team, "Marks_inside_50","Marks inside 50 (catch inside 50m arc)","76.1% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "One_pct","1 percenters (exceptional effort)", "53.2% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Tackles","Tackles", "53.6% confident win/loss difference positive")
+  plot_linerange_by_year(AFL.by.team, "Uncontested_possessions","Uncontested possessions (receive-dispose)", "65.9% confident win/loss difference positive")
 ```
 
 ### Insights from base metrics are very limited
@@ -206,11 +203,11 @@ Note: there were three pairs of 0:Inf in the data which were changed to 0.01:1 p
   head(AFL.by.match.idx, 6)
 ```
 
-## Sport is adversarial (cont'd)
+<!-- ## Sport is adversarial (cont'd) -->
 
-The following data and function were created to facilitate mosaic plots with Chi-square residuals on the following pages.
+<!-- The following data and function were created to facilitate mosaic plots with Chi-square residuals on the following pages. -->
 
-```{r dataprep5, eval=TRUE, echo=TRUE, warning=FALSE}
+```{r dataprep5, eval=TRUE, echo=FALSE, warning=FALSE}
 # Create copy of indices for mosaic plots
   AFL.by.match.idx.mosaic = AFL.by.match.idx %>% select(match_id, Team, team_result, starts_with("idx_")) %>% 
     mutate(team_result = factor(team_result, labels = c("Loss", "Win")))
@@ -262,9 +259,9 @@ The following data and function were created to facilitate mosaic plots with Chi
 Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win), corresponding mosaic plot coloured by Chi-squared residual:
 
 ```{r exploreplot11, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.6, fig.width=4.8}
-  plot_linerange_by_year(AFL.by.match.idx, "idx_win_ground_ball","idx_win_ground_ball: Win ground ball", "Positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_win_ground_ball","idx_win_ground_ball: Win ground ball", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_win_ground_ball", "team_result", 30, "")
-  plot_linerange_by_year(AFL.by.match.idx, "idx_win_aerial_ball","idx_win_aerial_ball: Win aerial ball", "Slight positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_win_aerial_ball","idx_win_aerial_ball: Win aerial ball", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_win_aerial_ball", "team_result", 50, "")
 ```
 
@@ -274,9 +271,9 @@ Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win),
 
 ```{r exploreplot12, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.6, fig.width=4.8}
   
-  plot_linerange_by_year(AFL.by.match.idx, "idx_clear_ball","idx_clear_ball: Win first use", "Slight positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_clear_ball","idx_clear_ball: Win first use", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_clear_ball", "team_result", 30, "")
-  plot_linerange_by_year(AFL.by.match.idx, "idx_less_clangers","idx_less_clangers: Make less errors", "Slight positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_less_clangers","idx_less_clangers: Make less errors", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_less_clangers", "team_result", 30, "")
 ```
 
@@ -285,9 +282,9 @@ Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win),
 Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win), corresponding mosaic plot coloured by Chi-squared residual:
 
 ```{r exploreplot13, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.6, fig.width=4.8}
-  plot_linerange_by_year(AFL.by.match.idx, "idx_goal_assist","idx_goal_assist: Teamwork for goal", "No clear relationship")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_goal_assist","idx_goal_assist: Teamwork for goal", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_goal_assist", "team_result", 50, "")
-  plot_linerange_by_year(AFL.by.match.idx, "idx_mark_kick","idx_mark_kick: Maintain possession", "Slight positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_mark_kick","idx_mark_kick: Maintain possession", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_mark_kick", "team_result", 50, "")
 ```
 
@@ -296,9 +293,9 @@ Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win),
 Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win), corresponding mosaic plot coloured by Chi-squared residual:
 
 ```{r exploreplot14, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.6, fig.width=4.8}
-  plot_linerange_by_year(AFL.by.match.idx, "idx_50m_entry","idx_50m_entry: Accurate 50m entry", "Positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_50m_entry","idx_50m_entry: Accurate 50m entry", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_50m_entry", "team_result", 40, "")
-  plot_linerange_by_year(AFL.by.match.idx, "idx_tackle","idx_tackle: Win ball back (tackles)", "Slight positive relationship to wins")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_tackle","idx_tackle: Win ball back (tackles)", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_tackle", "team_result", 30, "")
 ```
 
@@ -307,9 +304,9 @@ Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win),
 Indices by year, showing median, IQR and range (Red/LHS = loss, Blue/RHS = win), corresponding mosaic plot coloured by Chi-squared residual:
 
 ```{r exploreplot15, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=2.6, fig.width=4.8}
-  plot_linerange_by_year(AFL.by.match.idx, "idx_one_pct","idx_one_pct: Exceptional effort (1 percenters)", "No clear relationship")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_one_pct","idx_one_pct: Exceptional effort (1 percenters)", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_one_pct", "team_result", 40, "")
-  plot_linerange_by_year(AFL.by.match.idx, "idx_less_frees","idx_less_frees: Discipline", "No clear relationship")
+  plot_linerange_by_year(AFL.by.match.idx, "idx_less_frees","idx_less_frees: Discipline", "")
   ggplot_mosaic(AFL.by.match.idx.mosaic, "idx_less_frees", "team_result", 40, "")
 ```
 
@@ -408,23 +405,23 @@ The below correlation matrix shows there are a few metrics with stronger relatio
 ```
 
 
-## Selecting indices for machine learning (cont'd)
+<!-- ## Selecting indices for machine learning (cont'd) -->
 
-Which indices are worth exploring further through machine learning and modelling? These index scores for wins only are a useful way to visualise "how often" a score above zero occurs in a win.
+<!-- Which indices are worth exploring further through machine learning and modelling? These index scores for wins only are a useful way to visualise "how often" a score above zero occurs in a win. -->
 
-```{r select02, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=4.5, fig.width=5}
-  AFL.by.match.idx.1.tidy = AFL.by.match.idx.1 %>% arrange(match_id) %>% 
-  select(-round, -Team, -match_score_idx) %>% filter(team_result == 1) %>% gather(key, value, -Year, -match_id, -team_result)
+<!-- ```{r select02, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=4.5, fig.width=5} -->
+<!--   AFL.by.match.idx.1.tidy = AFL.by.match.idx.1 %>% arrange(match_id) %>%  -->
+<!--   select(-round, -Team, -match_score_idx) %>% filter(team_result == 1) %>% gather(key, value, -Year, -match_id, -team_result) -->
 
-  ggplot(AFL.by.match.idx.1.tidy %>% filter(!(key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) +
-  geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 3) + geom_hline(yintercept = 0, size = 1, col = "blue") +
-  theme(axis.text.x = element_text(size = 6, angle = 90))
-```
-```{r select03, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=3, fig.width=5}
-  ggplot(AFL.by.match.idx.1.tidy %>% filter((key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) +
-  geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 2) + geom_hline(yintercept = 0, size = 1, col = "blue") +
-  theme(axis.text.x = element_text(size = 6, angle = 90))
-```
+<!--   ggplot(AFL.by.match.idx.1.tidy %>% filter(!(key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) + -->
+<!--   geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 3) + geom_hline(yintercept = 0, size = 1, col = "blue") + -->
+<!--   theme(axis.text.x = element_text(size = 6, angle = 90)) -->
+<!-- ``` -->
+<!-- ```{r select03, eval=TRUE, echo=FALSE, warning=FALSE, fig.height=3, fig.width=5} -->
+<!--   ggplot(AFL.by.match.idx.1.tidy %>% filter((key %in% c("idx_50m_entry", "idx_goal_assist", "idx_less_frees", "idx_win_aerial_ball"))), aes(x = match_id, y = value)) + -->
+<!--   geom_line(aes(group = key), alpha = 0.6) + facet_wrap(~ key, nrow = 2) + geom_hline(yintercept = 0, size = 1, col = "blue") + -->
+<!--   theme(axis.text.x = element_text(size = 6, angle = 90)) -->
+<!-- ``` -->
 
 
 ## Selecting indices for machine learning (cont'd)
@@ -618,19 +615,19 @@ I checked the relative importance of each variable in the logistic regression mo
   as.numeric(performance(pred_logxR, "auc")@y.values)
 ```
 
-Variable | AUC excluding variable | Ranking | Comment
+Variable | AUC lift | Ranking | Comment
 -------- | -------- | ---- | ----------------------------- 
-idx_win_aerial_ball     | 0.88     | Last    | AUC went up without this variable, likely due to multicollinearity
-idx_less_frees          | 0.87     | 5th     | Negligible impact to AUC
-**idx_win_ground_ball** | **0.84** | **2nd** | **Strong impact to AUC**
-idx_less_clangers       | 0.86     | =3rd    | Some impact to AUC
-**idx_50m_entry**       | **0.83** | **1st** | **Strong impact to AUC**
-Inside_50s              | 0.86     | =3rd    | Some impact to AUC
+idx_win_aerial_ball     | -0.01     | Last    | AUC went up without this variable, likely due to multicollinearity
+idx_less_frees          | +0.00     | 5th     | Negligible impact to AUC
+**idx_win_ground_ball** | **+0.03** | **2nd** | **Strong impact to AUC**
+idx_less_clangers       | +0.01     | =3rd    | Some impact to AUC
+**idx_50m_entry**       | **+0.04** | **1st** | **Strong impact to AUC**
+Inside_50s              | +0.01     | =3rd    | Some impact to AUC
 
 
 ## TO DO
 
-Items I have yet to write up / finish off.
+Items I have yet to write up.
 
 ### How well the models predicted actual 2017 match results
 
@@ -646,10 +643,11 @@ Items I have yet to write up / finish off.
 
 - k-means clustering into six clusters - stratified by team ability (top, middle, bottom) and base game plan (fast, slow)
 - Built tuned decision tree and logistic regression models for each cluster
-- Yet to test accuracy using the same methodology
+- Decision Tree - tuned: ~70% prediction accuracy, ~0.68 AUC
+- Logistic Regression: ~70% prediction accuracy, ~0.70 AUC
 
 ### Conclusions
 
 - There are factors which are strong drivers of winning AFL matches
-- (analysis not complete) Ability to predict match results
+- Data has a strong ability to predict match results, up to 70% accuracy when using clustering to boost results
 - (analysis not started) Highly effective players who are not playing enough minutes

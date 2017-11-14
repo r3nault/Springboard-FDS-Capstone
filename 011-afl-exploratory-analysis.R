@@ -31,6 +31,144 @@ AFL.by.team <- AFL.by.player %>%
 save(AFL.by.team, file=".\\afl_by_team.Rda")
 
 
+
+
+# Statistical analysis of raw metrics: CI of difference of means (wins vs not wins)
+
+# Behinds
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Behinds) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+# one tail test: what is z-score
+diff_mean/diff_sd #0.41 : 65.9%
+
+# Bounces
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Bounces) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.18 : 57.1%
+
+# Clangers (REVERSED)
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Clangers) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[1,"mean"]-diff_distr[2,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[1,"sd"]^2 + diff_distr[2,"sd"]^2))
+diff_mean/diff_sd #0.22 : 58.7%
+
+# Clearances
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Clearances) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.25 : 59.9%
+
+# Contested_marks
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Contested_marks) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.31 : 62.2%
+
+# Contested_possessions
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Contested_possessions) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.33 : 62.9%
+
+# Disposals
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Disposals) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.52 : 69.9%
+
+# Frees
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Frees) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.06 : 52.4%
+
+# Frees_against (REVERSED)
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Frees_against) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[1,"mean"]-diff_distr[2,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[1,"sd"]^2 + diff_distr[2,"sd"]^2))
+diff_mean/diff_sd #0.05 : 52.0%
+
+# Goal_assists
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Goal_assists) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.89 : 81.3%
+
+# Goals
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Goals) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #1.13 : 87.1%
+
+# Handballs
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Handballs) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.19 : 57.5%
+
+# Hit_outs
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Hit_outs) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.09 : 53.6%
+
+# Inside_50s
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Inside_50s) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.77 : 77.9%
+
+# Kicks
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Kicks) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.81 : 79.1%
+
+# Marks
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Marks) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.47 : 68.1%
+
+# Marks_inside_50
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Marks_inside_50) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.71 : 76.1%
+
+# One_pct
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(One_pct) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.08 : 53.2%
+
+# Tackles
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Tackles) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.09 : 53.6%
+
+# Uncontested_possessions
+diff_distr = AFL.by.team %>% group_by(team_result) %>% select(Uncontested_possessions) %>% summarise_all(.funs = c("mean", "sd"))
+diff_mean = as.numeric(diff_distr[2,"mean"]-diff_distr[1,"mean"])
+diff_sd = as.numeric(sqrt(diff_distr[2,"sd"]^2 + diff_distr[1,"sd"]^2))
+diff_mean/diff_sd #0.41 : 65.9%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Match-wise (adversarial) view of results
 AFL.by.team.sub <- AFL.by.team %>% select(-Disposals, -Frees, -Hit_outs)
 AFL.by.match <- merge(AFL.by.team.sub, AFL.by.team.sub %>% rename (Team.opp = Team), 
