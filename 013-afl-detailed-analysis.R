@@ -203,9 +203,144 @@ test1 = subset(AFL.by.player.agg, AFL.by.player.agg$Year == 2017)
   # idx_less_frees = Frees_against.opp/Frees_against
   
 # How well do the models predict actual results
-  # Take player data for 2015-2016 (two years), try to predict match results for 2017 based on averages
-  AFL.by.player.2015.2016 = AFL.by.player %>% filter(Year %in% 2015:2016) %>% select(-(Year:Team), -Played_pct, -(home_away:match_score_idx)) %>% 
-    group_by(Player) %>% summarise_all(.funs = mean) %>% select(Player, Contested_marks, Frees_against, Contested_possessions, Clangers, Marks_inside_50, Inside_50s)
+  
+  # create unique player ids for tracking (trades etc)
+    # clean up player names for duplicates
+    player.dup = AFL.by.player %>% group_by(Player) %>% filter(max(Team) != min(Team)) %>% group_by(Team, Player) %>% summarise(minyr = min(Year), maxyr = max(Year)) %>% arrange(Player, minyr)
+    write.csv(player.dup, file="player_duplicates.csv")
+      # manual name changes
+      AFL.by.player[AFL.by.player$Team == "West Coast" & AFL.by.player$Player == "Brown, Mitch", "Player"] = "Brown, Mitch (WC)"
+      AFL.by.player[AFL.by.player$Team == "Melbourne" & AFL.by.player$Player == "Brown, Nathan", "Player"] = "Brown, Nathan (mid)"
+      AFL.by.player[AFL.by.player$Team %in% c("Western Bulldogs","Richmond") & AFL.by.player$Player == "Brown, Nathan", "Player"] = "Brown, Nathan (hf)"
+      AFL.by.player[AFL.by.player$Team == "Fremantle" & AFL.by.player$Player == "Browne, Andrew", "Player"] = "Browne, Andrew (FRE)"
+      AFL.by.player[AFL.by.player$Team == "Brisbane" & AFL.by.player$Player == "Johnson, Chris", "Player"] = "Johnson, Chris (BRIS)"
+      AFL.by.player[AFL.by.player$Team %in% c("Carlton","West Coast") & AFL.by.player$Player == "Kennedy, Josh", "Player"] = "Kennedy, Josh (ff)"
+      AFL.by.player[AFL.by.player$Team == "North Melbourne" & AFL.by.player$Player == "King, David", "Player"] = "King, David (NM)"
+      AFL.by.player[AFL.by.player$Team == "Gold Coast" & AFL.by.player$Player == "Lynch, Tom", "Player"] = "Lynch, Tom (GC)"
+      AFL.by.player[AFL.by.player$Team == "Sydney" & AFL.by.player$Player == "Reid, Sam", "Player"] = "Reid, Sam (SYD)"
+      AFL.by.player[AFL.by.player$Team == "North Melbourne" & AFL.by.player$Player == "Smith, Jesse", "Player"] = "Smith, Jesse (NM)"
+      AFL.by.player[AFL.by.player$Team == "North Melbourne" & AFL.by.player$Player == "Thompson, Scott", "Player"] = "Thompson, Scott (NM)"
+      
+    
+  # Take player data for 2015-2016 (two years), do linear regression, multiply slope by games/median(games)
+  AFL.by.player.2015.2016 = AFL.by.player %>% filter(Year %in% 2015:2016) %>% select(-Team, -Played_pct, -(home_away:match_score_idx)) %>% 
+    arrange(Player, Year, round) %>% group_by(Player) %>% mutate(roundseq = row_number()) %>% 
+    select(Player, roundseq, Contested_marks, Frees_against, Contested_possessions, Clangers, Marks_inside_50, Inside_50s) %>% 
+    do(lm_cont_mark = lm(Contested_marks ~ roundseq, data = .)$coef[[2]], lm_frees_ag = lm(Frees_against ~ roundseq, data = .)$coef[[2]],
+       lm_cont_poss = lm(Contested_possessions ~ roundseq, data = .)$coef[[2]], lm_clangers = lm(Clangers ~ roundseq, data = .)$coef[[2]],
+       lm_mark_i50 = lm(Marks_inside_50 ~ roundseq, data = .)$coef[[2]], lm_i50 = lm(Inside_50s ~ roundseq, data = .)$coef[[2]], games = nrow(.)) %>% 
+    mutate_all(funs(ifelse(is.na(.), 0, .)))
+    
+  AFL.by.player.2015.2016 = AFL.by.player.2015.2016 %>% mutate_at(vars(starts_with("lm")), funs(.*games/median(AFL.by.player.2015.2016$games)))
+  
+  # Take player data for 2016 (one year), do linear regression, multiply slope by games/median(games)
+  AFL.by.player.2016 = AFL.by.player %>% filter(Year == 2016) %>% select(-Team, -Played_pct, -(home_away:match_score_idx)) %>% 
+    arrange(Player, Year, round) %>% group_by(Player) %>% mutate(roundseq = row_number()) %>% 
+    select(Player, roundseq, Contested_marks, Frees_against, Contested_possessions, Clangers, Marks_inside_50, Inside_50s) %>% 
+    do(lm_cont_mark = lm(Contested_marks ~ roundseq, data = .)$coef[[2]], lm_frees_ag = lm(Frees_against ~ roundseq, data = .)$coef[[2]],
+       lm_cont_poss = lm(Contested_possessions ~ roundseq, data = .)$coef[[2]], lm_clangers = lm(Clangers ~ roundseq, data = .)$coef[[2]],
+       lm_mark_i50 = lm(Marks_inside_50 ~ roundseq, data = .)$coef[[2]], lm_i50 = lm(Inside_50s ~ roundseq, data = .)$coef[[2]], games = nrow(.)) %>% 
+    mutate_all(funs(ifelse(is.na(.), 0, .)))
+  
+  AFL.by.player.2016 = AFL.by.player.2016 %>% mutate_at(vars(starts_with("lm")), funs(.*games/median(AFL.by.player.2016$games)))
+  
+  # Take weighted average of slopes
+  AFL.by.player.slopes = full_join(AFL.by.player.2015.2016, AFL.by.player.2016, by = "Player", suffix = c(".1516",".16")) %>%
+    mutate_all(funs(ifelse(is.na(.), 0, .))) %>% 
+    semi_join(., AFL.by.player %>% filter(Year == 2017), by = "Player") %>% 
+    mutate(games = games.1516 + games.16,
+           lm_cont_mark = lm_cont_mark.1516 * games.1516/games + lm_cont_mark.16 * games.16/games,
+           lm_frees_ag = lm_frees_ag.1516 * games.1516/games + lm_frees_ag.16 * games.16/games,
+           lm_cont_poss = lm_cont_poss.1516 * games.1516/games + lm_cont_poss.16 * games.16/games,
+           lm_clangers = lm_clangers.1516 * games.1516/games + lm_clangers.16 * games.16/games,
+           lm_mark_i50 = lm_mark_i50.1516 * games.1516/games + lm_mark_i50.16 * games.16/games,
+           lm_i50 = lm_i50.1516 * games.1516/games + lm_i50.16 * games.16/games) %>% 
+    select(-ends_with(".1516"), -ends_with(".16"))
+  
+  # Get 2015-16 averages as baseline to apply slope
+  AFL.by.player.avg = AFL.by.player %>% filter(Year %in% 2015:2016) %>% select(-Team, -Played_pct, -(home_away:match_score_idx)) %>% group_by(Player) %>%
+    select(Player, Contested_marks, Frees_against, Contested_possessions, Clangers, Marks_inside_50, Inside_50s) %>% 
+    summarise_all(.funs = mean)
+    
+  
+  # Predict 2017 game stats using linear regression slopes
+  AFL.by.player.slopes = inner_join(AFL.by.player.slopes, AFL.by.player.avg, by = "Player")
+  
+  zero.neg = function(x){return(if_else(x<0, 0, x))}
+  
+  AFL.matches.2017.pred.LR = AFL.by.player %>% filter(Year == 2017) %>% select(match_id, round, Team, vs_opponent, Player, team_result) %>% 
+    group_by(Player) %>% mutate(roundseq = row_number()) %>% inner_join(AFL.by.player.slopes, by = "Player") %>% 
+    mutate(Contested_marks = zero.neg(Contested_marks + roundseq * lm_cont_mark),
+           Frees_against = zero.neg(Frees_against + roundseq * lm_frees_ag),
+           Contested_possessions = zero.neg(Contested_possessions + roundseq * lm_cont_poss),
+           Clangers = zero.neg(Clangers + roundseq * lm_clangers),
+           Marks_inside_50 = zero.neg(Marks_inside_50 + roundseq * lm_mark_i50),
+           Inside_50s = zero.neg(Inside_50s + roundseq * lm_i50)) %>% 
+    select(-starts_with("lm_"), -games, -roundseq) %>% ungroup
+  
+  # take a team-wise view by summing up the player averages
+  AFL.matches.2017.pred.LR.sum = AFL.matches.2017.pred.LR %>% group_by(match_id, round, Team, vs_opponent, team_result) %>% summarise_at(vars(Contested_marks:Inside_50s), .funs = sum)
+  
+  i50.top.n.LR <- function(matchid, team.nm, n = 10){
+    DF <- AFL.matches.2017.pred.LR %>% select(match_id, Team, "Inside_50s") %>% filter(match_id == matchid) %>% top_n(n)
+    prop.top.10 <- (DF %>% filter(Team == team.nm) %>% count)/(nrow(DF))
+    return(prop.top.10)
+  }
+  setDT(AFL.matches.2017.pred.LR.sum)[ , Inside_50s_prop := i50.top.n.LR(match_id, Team, 10), by=c("match_id","round","Team")]
+  
+  
+  AFL.matches.2017.pred.LR.sum.1 = merge(AFL.matches.2017.pred.LR.sum, AFL.matches.2017.pred.LR.sum %>% rename (Team.opp = Team), by.x = c("match_id","round","Team"), by.y = c("match_id","round","vs_opponent"), suffix = c("",".opp")) %>% 
+    mutate(idx_win_ground_ball = log10(Contested_possessions/Contested_possessions.opp), idx_win_aerial_ball = log10(Contested_marks/Contested_marks.opp), idx_less_clangers = log10(Clangers.opp/Clangers),
+           idx_50m_entry = log10((Marks_inside_50/Inside_50s)/(Marks_inside_50.opp/Inside_50s.opp)), idx_less_frees = log10(Frees_against.opp/Frees_against)) %>% 
+    select(match_id:team_result, starts_with("idx_"), Inside_50s = Inside_50s_prop)
+  
+  
+  
+  
+  # using basic CART decision tree
+  prp(tree1_V2)
+  pred2017LRt = predict(tree1_V2, newdata = AFL.matches.2017.pred.LR.sum.1, type = "class")
+  table(AFL.matches.2017.pred.LR.sum.1$team_result, pred2017LRt)
+  (112+131)/414 #0.59 (worse)
+  
+  pred2017LRtROC = predict(tree1_V2, newdata = AFL.matches.2017.pred.LR.sum.1)
+  pred2017LRtR = prediction(pred2017LRtROC[ ,2], AFL.matches.2017.pred.LR.sum.1$team_result)
+  perf2017LRtR = performance(pred2017LRtR, "tpr", "fpr")
+  plot(perf2017LRtR)
+  # AUC
+  as.numeric(performance(pred2017LRtR, "auc")@y.values) #0.58 (worse)
+  
+  # using tuned CART decision tree
+  prp(tree2_V2)
+  pred2017LR = predict(tree2_V2, newdata = AFL.matches.2017.pred.LR.sum.1, type = "class")
+  table(AFL.matches.2017.pred.LR.sum.1$team_result, pred2017LR)
+  (126+115)/414 #0.58 (worse)
+  
+  pred2017LRROC = predict(tree2_V2, newdata = AFL.matches.2017.pred.LR.sum.1)
+  pred2017LRR = prediction(pred2017LRROC[ ,2], AFL.matches.2017.pred.LR.sum.1$team_result)
+  perf2017LRR = performance(pred2017LRR, "tpr", "fpr")
+  plot(perf2017LRR)
+  # AUC
+  as.numeric(performance(pred2017LRR, "auc")@y.values) #0.59 (worse)
+  
+  # using tuned logistic regression model
+  pred2017LRL = predict(log3, type = "response", newdata = AFL.matches.2017.pred.LR.sum.1)
+  table(AFL.matches.2017.pred.LR.sum.1$team_result, pred2017LRL >= 0.5)
+  (115+112)/414 #0.55 (worse)
+  
+  # AUC
+  pred2017LRLR <- prediction(pred2017LRL, AFL.matches.2017.pred.LR.sum.1$team_result)
+  as.numeric(performance(pred2017LRLR, "auc")@y.values) #0.61 (worse)
+  
+  
+  
+  
+  
+  
+  
+#########################################################################################################################  
+  #######################################################################################################################
+  
   
   # note: we will not have stats for players without 2015-16 records which is realistic
   AFL.matches.2017.pred = AFL.by.player %>% filter(Year == 2017) %>% select(match_id, round, Team, vs_opponent, Player, team_result) %>% inner_join(AFL.by.player.2015.2016, by = "Player")
