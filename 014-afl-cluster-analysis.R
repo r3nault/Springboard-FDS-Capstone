@@ -132,7 +132,7 @@ library(e1071)
                       data = train1_clust5, method = "class", control = rpart.control(cp = 0.019)) #altered cp
   prp(tree_clust5, extra = 1, fallen.leaves = TRUE, varlen = 0)  
   
-  table(test1_clust5$team_result, predict(tree_clust5, newdata = test1_clust5, type = "prob")[,2] > 0.7)
+  table(test1_clust5$team_result, predict(tree_clust5, newdata = test1_clust5, type = "prob")[,2] > 0.5)
   62/88 #0.69
   pred_tree_clust5 = prediction(predict(tree_clust5, newdata = test1_clust5)[ ,2], test1_clust5$team_result) # note: changing threshold to 0.7 makes sense here
   perf_tree_clust5 = performance(pred_tree_clust5, "tpr", "fpr")
@@ -324,6 +324,10 @@ library(e1071)
 ## TEST 2017 PREDICTED DATA
   
   # DECISION TREE
+    # cluster 1 example for write up
+      table(pred2017_clust1$team_result, predict(tree_clust1, newdata = pred2017_clust1, type = "prob")[,2] > 0.5)
+      pred_tree_clust1_2017 = prediction(predict(tree_clust1, newdata = pred2017_clust1)[ ,2], pred2017_clust1$team_result)
+      as.numeric(performance(pred_tree_clust1_2017, "auc")@y.values)
       
     # cluster 1
       table(pred2017_clust1$team_result, predict(tree_clust1, newdata = pred2017_clust1, type = "prob")[,2] > 0.5)
@@ -376,8 +380,8 @@ library(e1071)
       text(0.9, 0.22, labels = paste("Class accuracy = ", round(94/146,2)*100, "%", sep=""), adj=1, cex = 1.5)
     
     # cluster 6
-      table(pred2017_clust6$team_result, predict(tree_clust6, newdata = pred2017_clust6, type = "prob")[,2] > 0.7)
-      42/64 #0.66
+      table(pred2017_clust6$team_result, predict(tree_clust6, newdata = pred2017_clust6, type = "prob")[,2] > 0.5)
+      39/64 #0.61
       pred_tree_clust6_2017 = prediction(predict(tree_clust6, newdata = pred2017_clust6)[ ,2], pred2017_clust6$team_result)
       perf_tree_clust6_2017 = performance(pred_tree_clust6_2017, "tpr", "fpr")
       par(cex = 0.6)
@@ -401,8 +405,8 @@ library(e1071)
       
     # cluster 2
       pred_log_clust2_2017 = predict(log_clust2, type = "response", newdata = pred2017_clust2)
-      table(pred2017_clust2$team_result, pred_log_clust2_2017 >= 0.9)
-      12/17 #0.71
+      table(pred2017_clust2$team_result, pred_log_clust2_2017 >= 0.5)
+      11/17 #0.65
       pred_log_clust2R_2017 = prediction(pred_log_clust2_2017, as.factor(pred2017_clust2$team_result))
       # plot ROC curve
       perf_log_clust2R_2017 = performance(pred_log_clust2R_2017, "tpr", "fpr")
@@ -413,8 +417,8 @@ library(e1071)
       
     # cluster 3
       pred_log_clust3_2017 = predict(log_clust3, type = "response", newdata = pred2017_clust3)
-      table(pred2017_clust3$team_result, pred_log_clust3_2017 >= 0.4)
-      31/43 #0.72
+      table(pred2017_clust3$team_result, pred_log_clust3_2017 >= 0.5)
+      30/43 #0.70
       pred_log_clust3R_2017 = prediction(pred_log_clust3_2017, as.factor(pred2017_clust3$team_result))
       # plot ROC curve
       perf_log_clust3R_2017 = performance(pred_log_clust3R_2017, "tpr", "fpr")
@@ -425,8 +429,8 @@ library(e1071)
       
     # cluster 4
       pred_log_clust4_2017 = predict(log_clust4, type = "response", newdata = pred2017_clust4)
-      table(pred2017_clust4$team_result, pred_log_clust4_2017 >= 0.4)
-      85/133 #0.64
+      table(pred2017_clust4$team_result, pred_log_clust4_2017 >= 0.5)
+      80/133 #0.60
       pred_log_clust4R_2017 = prediction(pred_log_clust4_2017, as.factor(pred2017_clust4$team_result))
       # plot ROC curve
       perf_log_clust4R_2017 = performance(pred_log_clust4R_2017, "tpr", "fpr")
@@ -437,8 +441,8 @@ library(e1071)
       
     # cluster 5
       pred_log_clust5_2017 = predict(log_clust5, type = "response", newdata = pred2017_clust5)
-      table(pred2017_clust5$team_result, pred_log_clust5_2017 >= 0.4)
-      90/146 #0.62
+      table(pred2017_clust5$team_result, pred_log_clust5_2017 >= 0.5)
+      87/146 #0.60
       pred_log_clust5R_2017 = prediction(pred_log_clust5_2017, as.factor(pred2017_clust5$team_result))
       # plot ROC curve
       perf_log_clust5R_2017 = performance(pred_log_clust5R_2017, "tpr", "fpr")
@@ -449,8 +453,8 @@ library(e1071)
       
     # cluster 6
       pred_log_clust6_2017 = predict(log_clust6, type = "response", newdata = pred2017_clust6)
-      table(pred2017_clust6$team_result, pred_log_clust6_2017 >= 0.6)
-      45/64 #0.70
+      table(pred2017_clust6$team_result, pred_log_clust6_2017 >= 0.5)
+      44/64 #0.69
       pred_log_clust6R_2017 = prediction(pred_log_clust6_2017, as.factor(pred2017_clust6$team_result))
       # plot ROC curve
       perf_log_clust6R_2017 = performance(pred_log_clust6R_2017, "tpr", "fpr")

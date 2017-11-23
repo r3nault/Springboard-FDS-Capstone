@@ -150,6 +150,8 @@ test1 = subset(AFL.by.player.agg, AFL.by.player.agg$Year == 2017)
   cor(train1num)
   
   summary(log3)
+  library(broom)
+  tidy(log3)
     # training accuracy
     pred3tr = predict(log3, type = "response")
     table(train1$team_result, pred3tr >= 0.5)
@@ -248,7 +250,7 @@ test1 = subset(AFL.by.player.agg, AFL.by.player.agg$Year == 2017)
            idx_50m_entry = log10((Marks_inside_50/Inside_50s)/(Marks_inside_50.opp/Inside_50s.opp)), idx_less_frees = log10(Frees_against.opp/Frees_against)) %>% 
     select(match_id:team_result, starts_with("idx_"), Inside_50s = Inside_50s_prop)
   
-  
+  save(AFL.matches.2017.pred.sum.1, file = "AFL_matches_2017_pred_sum_1.Rda")
   
   
   # using basic CART decision tree
@@ -262,7 +264,7 @@ test1 = subset(AFL.by.player.agg, AFL.by.player.agg$Year == 2017)
     perf2017tR = performance(pred2017tR, "tpr", "fpr")
     plot(perf2017tR)
     # AUC
-    as.numeric(performance(pred2017R, "auc")@y.values) #0.63
+    as.numeric(performance(pred2017tR, "auc")@y.values) #0.59
   
   # using tuned CART decision tree
     prp(tree2_V2)
