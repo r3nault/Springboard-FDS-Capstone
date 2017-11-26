@@ -51,6 +51,24 @@ Detailed steps on scraping and wrangling can be found in this report: [rawgit.co
 ```
 
 
+## Player metrics glossary
+
+Here is a set of very brief descriptions of the player metrics tracked during an AFL match:
+
+Term | Description | Term | Description
+---- | ----------- | ---- | -----------
+Goal | Kicking the ball through the taller centre posts (6 points) | **Behind** | Ball goes through the shorter side posts or “goal” is touched by a player before crossing the line (1 point)
+Goal assist | As the name suggests, assisting a teammate’s goal | **Hit out** | Tapping the ball from a "ball up" (umpire bounces or throws ball up for a contest)
+Disposal | Also called a possession; a kick or handball | **Kick** | Kicking the ball, usually to a team mate or goal
+Handball | Hit ball with a closed fist when held by opposite hand | **Contested possession** | Winning the ball in a contest and disposing of it
+Uncontested possession | Receiving or finding the ball in open space and disposing of it | **Clearance** | Clearing a disputed ball to team advantage
+Mark | Catching a kicked ball which has travelled at least 15m | **Mark inside 50** | A mark taken inside the attacking 50m arc
+Contested mark | A mark taken against one or more opponents or in a pack of players | **Inside 50** | Getting the ball inside the attacking 50m arc from goal
+Bounce | Running with the ball, a player must either bounce it or dispose of it within 15m | **Clanger** | An unforced error e.g. dropping an easy mark
+Tackle | Grabbing the player with the ball between knees and shoulders | **One percenter** | An act which shows extraordinary courage or effort
+Free kick against | Giving away a free kick to the opposition (being penalised)
+
+
 # Exploratory Analysis
 
 <!-- ## Functions for base exploratory analysis -->
